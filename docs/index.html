@@ -118,113 +118,6 @@ window.Quarto = {
 <p><img src="graphical-abstract.png" class="img-fluid" style="border-radius:10px;width:100.0%"></p>
 <p>[…].</p>
 </section>
-<section id="statistical-analysis" class="level1">
-<h1>Statistical analysis</h1>
-<p>We analyzed the data using Bayesian multilevel regression models fitted in <code>brms</code>. The dataset was in long format, with repeated observations nested within participants and indexed by <code>id</code>. Time was treated as an ordered factor with three occasions (<code>t-1</code>, <code>t-2</code>, and <code>t-3</code>), and the model used polynomial contrasts for this factor. Accordingly, the time effect was represented by two orthogonal components, a linear term and a quadratic term, rather than by pairwise comparisons against a single reference level. The main aim of the models was to evaluate whether the longitudinal association between platelet subtypes and the study outcomes changed over time, while adjusting for sex, age, and body mass index (BMI). Participant-level heterogeneity was modeled through random intercepts. Because the same participants contributed repeated measurements, this random-intercept structure was used to account for within-person correlation across visits.</p>
-<p>Let <span class="math inline">\(i = 1,\dots,N\)</span> index participants and <span class="math inline">\(t \in \{1,2,3\}\)</span> index measurement occasions. Let</p>
-<p><span class="math display">\[
-\mathbf{z}_{it} =
-\begin{pmatrix}
-P^{-}_{it} \\
-P^{+}_{it} \\
-\text{sex}_i \\
-\text{age}_{i} \\
-\text{BMI}_{i}
-\end{pmatrix},
-\]</span></p>
-<p>where <span class="math inline">\(P^{-}_{it}\)</span> denotes the standardized percentage of CD41<span class="math inline">\(^+\)</span>/CD62<span class="math inline">\(^-\)</span> platelets and <span class="math inline">\(P^{+}_{it}\)</span> denotes the standardized percentage of CD41<span class="math inline">\(^+\)</span>/CD62<span class="math inline">\(^+\)</span> platelets. To represent the ordered time factor, let</p>
-<p><span class="math display">\[
-\mathbf{c}_t =
-\begin{pmatrix}
-L_t \\
-Q_t
-\end{pmatrix},
-\]</span> where <span class="math inline">\(L_t\)</span> and <span class="math inline">\(Q_t\)</span> are the linear and quadratic polynomial contrast scores for time, respectively. This notation keeps the model specification compact while preserving the structure of the fitted formulas. In all cases, time-by-covariate terms were included so that the association between platelet composition and the outcomes could vary across the longitudinal trajectory in its linear and quadratic components.</p>
-<section id="frailty-model" class="level3">
-<h3 class="anchored" data-anchor-id="frailty-model">Frailty model</h3>
-<p>Frailty was analyzed as a binomial outcome with four trials per observation, corresponding to the FRAIL questionnaire score ranging from 0 to 4. Let <span class="math inline">\(F_{it}\)</span> denote the frailty score for participant <span class="math inline">\(i\)</span> at time <span class="math inline">\(t\)</span>. The model was specified as</p>
-<p><span class="math display">\[
-F_{it} \sim \text{Binomial}(4, p_{it}),
-\]</span></p>
-<p>with logit link</p>
-<p><span class="math display">\[
-\text{logit}(p_{it}) = \eta^{(F)}_{it}.
-\]</span></p>
-<p>The linear predictor was written as</p>
-<p><span class="math display">\[
-\eta^{(F)}_{it}
-= \alpha_F
-+ \mathbf{c}_t^\top \boldsymbol{\tau}_F
-+ \mathbf{z}_{it}^\top \boldsymbol{\beta}_F
-+ (\mathbf{c}_t \otimes \mathbf{z}_{it})^\top \boldsymbol{\Gamma}_F
-+ u^{(F)}_i,
-\]</span> where <span class="math inline">\(\alpha_F\)</span> is the intercept, <span class="math inline">\(\boldsymbol{\tau}_F\)</span> contains the linear and quadratic time effects, <span class="math inline">\(\boldsymbol{\beta}_F\)</span> contains the main effects of platelet percentages and covariates, and <span class="math inline">\(\boldsymbol{\Gamma}_F\)</span> contains the interactions between the time polynomial terms and the predictors. The term <span class="math inline">\(u^{(F)}_i \sim \mathcal{N}(0,\sigma_F^2)\)</span> is the participant-specific random intercept. This formulation implies that the association between each platelet subtype and frailty can differ not only over time in general, but specifically across the linear and quadratic components of the ordered time factor. Because the platelet predictors were included through <code>mi()</code>, missing values were handled inside the model rather than by complete-case deletion, so uncertainty in those predictors was propagated into the frailty estimates.</p>
-<p>Although the FRAIL questionnaire score has four ordered levels, it was modeled as a binomial count with four trials because the score is bounded between 0 and 4 and the <code>brms</code> formulation directly accommodates this structure. The resulting coefficients are interpreted on the log-odds scale. Exponentiating a coefficient gives an odds ratio associated with a one-unit increase in the predictor, holding the remaining covariates constant. The coefficients for the time contrasts represent the shape of change across the three measurement occasions: the linear term captures monotonic increase or decrease across time, and the quadratic term captures curvature. The interaction terms indicate whether that temporal pattern differs according to platelet subtype or covariate level.</p>
-</section>
-<section id="body-composition-model" class="level3">
-<h3 class="anchored" data-anchor-id="body-composition-model">Body composition model</h3>
-<p>Muscle mass and fat mass were modeled jointly as a multivariate Gaussian outcome. Let <span class="math inline">\(M_{it}\)</span> denote standardized muscle mass and <span class="math inline">\(G_{it}\)</span> denote standardized fat mass. The joint response was</p>
-<p><span class="math display">\[
-\mathbf{Y}^{(C)}_{it}
-=
-\begin{pmatrix}
-M_{it} \\
-G_{it}
-\end{pmatrix}
-\sim
-\mathcal{N}_2\!\left(
-\boldsymbol{\mu}^{(C)}_{it},
-\boldsymbol{\Sigma}^{(C)}
-\right),
-\]</span></p>
-<p>where <span class="math inline">\(\boldsymbol{\Sigma}^{(C)}\)</span> is the residual covariance matrix. The outcome-specific linear predictor can be written compactly as</p>
-<p><span class="math display">\[
-\boldsymbol{\mu}^{(C)}_{it}
-= \boldsymbol{\alpha}_C
-+ \mathbf{B}_C \mathbf{z}_{it}
-+ \mathbf{A}_C \mathbf{c}_t
-+ \mathbf{G}_C (\mathbf{c}_t \otimes \mathbf{z}_{it})
-+ \mathbf{u}^{(C)}_i.
-\]</span></p>
-<p>Here, <span class="math inline">\(\boldsymbol{\alpha}_C\)</span> is a 2-dimensional intercept vector, <span class="math inline">\(\mathbf{B}_C\)</span> contains the main effects for the two platelet variables and the adjustment covariates, <span class="math inline">\(\mathbf{A}_C\)</span> contains the linear and quadratic time effects, and <span class="math inline">\(\mathbf{G}_C\)</span> contains the corresponding time-by-predictor interaction terms. The random-intercept vector <span class="math inline">\(\mathbf{u}^{(C)}_i\)</span> captures subject-specific deviations for the two outcomes. This multivariate structure allows the two body-composition outcomes to be modeled jointly while estimating their residual correlation after adjustment for time, covariates, and participant-level heterogeneity.</p>
-<p>This specification is useful because muscle mass and fat mass are biologically related and may show correlated variation that is not fully explained by the measured covariates. By modeling them jointly, the analysis exploits that dependence rather than treating the outcomes as statistically independent. The fixed effects quantify adjusted associations for each outcome separately, while the residual covariance matrix summarizes the remaining contemporaneous association between muscle and fat mass after accounting for the predictors in the model.</p>
-</section>
-<section id="physical-function-model" class="level3">
-<h3 class="anchored" data-anchor-id="physical-function-model">Physical function model</h3>
-<p>Physical function was modeled in the same multivariate framework, but with four Gaussian outcomes. Let <span class="math inline">\(D_{it}\)</span> denote standardized average handgrip strength, <span class="math inline">\(S_{it}\)</span> standardized chair sit-to-stand performance, <span class="math inline">\(E_{it}\)</span> standardized elbow flexion performance, and <span class="math inline">\(T_{it}\)</span> standardized timed up-and-go performance. The joint response was</p>
-<p><span class="math display">\[
-\mathbf{Y}^{(F)}_{it}
-=
-\begin{pmatrix}
-D_{it} \\
-S_{it} \\
-E_{it} \\
-T_{it}
-\end{pmatrix}
-\sim
-\mathcal{N}_4\!\left(
-\boldsymbol{\mu}^{(F)}_{it},
-\boldsymbol{\Sigma}^{(F)}
-\right).
-\]</span></p>
-<p>The corresponding linear predictor was</p>
-<p><span class="math display">\[
-\boldsymbol{\mu}^{(F)}_{it}
-= \boldsymbol{\alpha}_F
-+ \mathbf{B}_F \mathbf{z}_{it}
-+ \mathbf{A}_F \mathbf{c}_t
-+ \mathbf{G}_F (\mathbf{c}_t \otimes \mathbf{z}_{it})
-+ \mathbf{u}^{(F)}_i.
-\]</span> As in the body-composition model, <span class="math inline">\(\boldsymbol{\alpha}_F\)</span> is a vector of intercepts, <span class="math inline">\(\mathbf{B}_F\)</span> contains the main effects, <span class="math inline">\(\mathbf{A}_F\)</span> contains the linear and quadratic effects of time, <span class="math inline">\(\mathbf{G}_F\)</span> contains the time-by-predictor interactions, and <span class="math inline">\(\mathbf{u}^{(F)}_i\)</span> denotes the participant-specific random intercepts. The covariance matrix <span class="math inline">\(\boldsymbol{\Sigma}^{(F)}\)</span> captures residual dependence among the four function outcomes after adjustment.</p>
-<p>This multivariate specification is appropriate because the physical function tests are related but not identical aspects of performance. Handgrip strength, chair stand, elbow flexion, and timed up-and-go may share common determinants, yet each outcome also retains outcome-specific variation. Joint modeling allows the estimated associations with platelet subtypes to be assessed simultaneously across all four outcomes, while preserving their correlation structure. In practice, this is preferable to running separate univariate models if the aim is to compare effect patterns across the functional domain and to obtain a coherent multivariate summary.</p>
-</section>
-<section id="estimation-and-interpretation" class="level3">
-<h3 class="anchored" data-anchor-id="estimation-and-interpretation">Estimation and interpretation</h3>
-<p>All models were estimated in a Bayesian framework. Posterior summaries were used to describe the adjusted associations between platelet subtypes and the outcomes. For each coefficient, we examined the posterior mean or median and the corresponding 95% credible interval. The main effects of the platelet variables describe associations across the longitudinal trend after accounting for the polynomial time structure, rather than associations at a single reference visit. The coefficients attached to <span class="math inline">\(\mathbf{c}_t\)</span> quantify the overall linear and quadratic shape of change across <code>t-1</code>, <code>t-2</code>, and <code>t-3</code> when all continuous predictors are held constant. The time-by-predictor interaction terms indicate whether the relationship between platelet composition and the outcome changes in its linear or quadratic component over time.</p>
-<p>For the frailty model, coefficients are interpreted on the log-odds scale and can be expressed as odds ratios by exponentiation. For the Gaussian models, coefficients are interpreted as expected changes in the standardized outcome per one-unit increase in the predictor, holding the other terms constant. Because the outcomes in the body-composition and physical-function models were standardized, the coefficients are directly comparable in standardized units across outcomes. The residual correlation matrices in the multivariate models were also examined, since they quantify the dependence among outcomes that remains after adjustment for the fixed effects and random intercepts.</p>
-<p>Model interpretation focused on the magnitude and direction of the posterior estimates, together with uncertainty reflected in the credible intervals. Time-by-platelet interactions were treated as evidence of effect heterogeneity across the ordered follow-up trajectory, specifically whether the association differed in the linear or quadratic temporal component. In the multivariate models, a nonzero residual correlation suggests that outcomes still share variation beyond what is explained by the measured predictors, which supports the use of a joint modeling strategy rather than independent regressions.</p>
-</section>
-</section>
 <section id="results" class="level1">
 <h1>Results</h1>
 <section id="sample-characterization" class="level2">
@@ -234,23 +127,23 @@ T_{it}
 <p>Physical performance measures were consistently higher in males. Average handgrip strength was 32.1 ± 5.3 kg in males and 21.2 ± 4.4 kg in females, and males also showed slightly higher repetitions in chair sit-to-stand and elbow flexion tests. In contrast, females had longer timed up-and-go durations (6.4 ± 2.0 vs 5.2 ± 1.5 seconds), indicating lower mobility performance. Frailty distribution was skewed toward lower scores, with 53.7% of participants scoring 0 and fewer than 2% scoring 3 or 4. Platelet subtype distributions were similar between sexes, with no clear differences in the relative proportions of CD41<sup>+</sup>/CD62<sup>-</sup> and CD41<sup>+</sup>/CD62<sup>+</sup> platelets. The complete sample characterization can be observed in table 1.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="jlmrcozzju" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#jlmrcozzju table {
+<div id="vvxznhzoxf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#vvxznhzoxf table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#jlmrcozzju thead, #jlmrcozzju tbody, #jlmrcozzju tfoot, #jlmrcozzju tr, #jlmrcozzju td, #jlmrcozzju th {
+#vvxznhzoxf thead, #vvxznhzoxf tbody, #vvxznhzoxf tfoot, #vvxznhzoxf tr, #vvxznhzoxf td, #vvxznhzoxf th {
   border-style: none;
 }
 
-#jlmrcozzju p {
+#vvxznhzoxf p {
   margin: 0;
   padding: 0;
 }
 
-#jlmrcozzju .gt_table {
+#vvxznhzoxf .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -276,12 +169,12 @@ T_{it}
   border-left-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_caption {
+#vvxznhzoxf .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#jlmrcozzju .gt_title {
+#vvxznhzoxf .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -293,7 +186,7 @@ T_{it}
   border-bottom-width: 0;
 }
 
-#jlmrcozzju .gt_subtitle {
+#vvxznhzoxf .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -305,7 +198,7 @@ T_{it}
   border-top-width: 0;
 }
 
-#jlmrcozzju .gt_heading {
+#vvxznhzoxf .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -317,13 +210,13 @@ T_{it}
   border-right-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_bottom_border {
+#vvxznhzoxf .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_col_headings {
+#vvxznhzoxf .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -338,7 +231,7 @@ T_{it}
   border-right-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_col_heading {
+#vvxznhzoxf .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -358,7 +251,7 @@ T_{it}
   overflow-x: hidden;
 }
 
-#jlmrcozzju .gt_column_spanner_outer {
+#vvxznhzoxf .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -370,15 +263,15 @@ T_{it}
   padding-right: 4px;
 }
 
-#jlmrcozzju .gt_column_spanner_outer:first-child {
+#vvxznhzoxf .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#jlmrcozzju .gt_column_spanner_outer:last-child {
+#vvxznhzoxf .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#jlmrcozzju .gt_column_spanner {
+#vvxznhzoxf .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -390,11 +283,11 @@ T_{it}
   width: 100%;
 }
 
-#jlmrcozzju .gt_spanner_row {
+#vvxznhzoxf .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#jlmrcozzju .gt_group_heading {
+#vvxznhzoxf .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -420,7 +313,7 @@ T_{it}
   text-align: left;
 }
 
-#jlmrcozzju .gt_empty_group_heading {
+#vvxznhzoxf .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -435,15 +328,15 @@ T_{it}
   vertical-align: middle;
 }
 
-#jlmrcozzju .gt_from_md > :first-child {
+#vvxznhzoxf .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#jlmrcozzju .gt_from_md > :last-child {
+#vvxznhzoxf .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#jlmrcozzju .gt_row {
+#vvxznhzoxf .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -462,7 +355,7 @@ T_{it}
   overflow-x: hidden;
 }
 
-#jlmrcozzju .gt_stub {
+#vvxznhzoxf .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -475,7 +368,7 @@ T_{it}
   padding-right: 5px;
 }
 
-#jlmrcozzju .gt_stub_row_group {
+#vvxznhzoxf .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -489,15 +382,15 @@ T_{it}
   vertical-align: top;
 }
 
-#jlmrcozzju .gt_row_group_first td {
+#vvxznhzoxf .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#jlmrcozzju .gt_row_group_first th {
+#vvxznhzoxf .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#jlmrcozzju .gt_summary_row {
+#vvxznhzoxf .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -507,16 +400,16 @@ T_{it}
   padding-right: 5px;
 }
 
-#jlmrcozzju .gt_first_summary_row {
+#vvxznhzoxf .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_first_summary_row.thick {
+#vvxznhzoxf .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#jlmrcozzju .gt_last_summary_row {
+#vvxznhzoxf .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -526,7 +419,7 @@ T_{it}
   border-bottom-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_grand_summary_row {
+#vvxznhzoxf .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -536,7 +429,7 @@ T_{it}
   padding-right: 5px;
 }
 
-#jlmrcozzju .gt_first_grand_summary_row {
+#vvxznhzoxf .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -546,7 +439,7 @@ T_{it}
   border-top-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_last_grand_summary_row_top {
+#vvxznhzoxf .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -556,11 +449,11 @@ T_{it}
   border-bottom-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_striped {
+#vvxznhzoxf .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#jlmrcozzju .gt_table_body {
+#vvxznhzoxf .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -569,7 +462,7 @@ T_{it}
   border-bottom-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_footnotes {
+#vvxznhzoxf .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -583,7 +476,7 @@ T_{it}
   border-right-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_footnote {
+#vvxznhzoxf .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -592,7 +485,7 @@ T_{it}
   padding-right: 5px;
 }
 
-#jlmrcozzju .gt_sourcenotes {
+#vvxznhzoxf .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -606,7 +499,7 @@ T_{it}
   border-right-color: #D3D3D3;
 }
 
-#jlmrcozzju .gt_sourcenote {
+#vvxznhzoxf .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -614,72 +507,72 @@ T_{it}
   padding-right: 5px;
 }
 
-#jlmrcozzju .gt_left {
+#vvxznhzoxf .gt_left {
   text-align: left;
 }
 
-#jlmrcozzju .gt_center {
+#vvxznhzoxf .gt_center {
   text-align: center;
 }
 
-#jlmrcozzju .gt_right {
+#vvxznhzoxf .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#jlmrcozzju .gt_font_normal {
+#vvxznhzoxf .gt_font_normal {
   font-weight: normal;
 }
 
-#jlmrcozzju .gt_font_bold {
+#vvxznhzoxf .gt_font_bold {
   font-weight: bold;
 }
 
-#jlmrcozzju .gt_font_italic {
+#vvxznhzoxf .gt_font_italic {
   font-style: italic;
 }
 
-#jlmrcozzju .gt_super {
+#vvxznhzoxf .gt_super {
   font-size: 65%;
 }
 
-#jlmrcozzju .gt_footnote_marks {
+#vvxznhzoxf .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#jlmrcozzju .gt_asterisk {
+#vvxznhzoxf .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#jlmrcozzju .gt_indent_1 {
+#vvxznhzoxf .gt_indent_1 {
   text-indent: 5px;
 }
 
-#jlmrcozzju .gt_indent_2 {
+#vvxznhzoxf .gt_indent_2 {
   text-indent: 10px;
 }
 
-#jlmrcozzju .gt_indent_3 {
+#vvxznhzoxf .gt_indent_3 {
   text-indent: 15px;
 }
 
-#jlmrcozzju .gt_indent_4 {
+#vvxznhzoxf .gt_indent_4 {
   text-indent: 20px;
 }
 
-#jlmrcozzju .gt_indent_5 {
+#vvxznhzoxf .gt_indent_5 {
   text-indent: 25px;
 }
 
-#jlmrcozzju .katex-display {
+#vvxznhzoxf .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#jlmrcozzju div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#vvxznhzoxf div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -1013,23 +906,133 @@ N = 95</th>
 </div>
 </div>
 <p><strong>Table 1</strong>. Sample description and sociodemographic characterization. Data is presented as mean ± standard deviation for numerical variables, meanwhile absolute and relative frequency was used for discrete ones. Difference between males and females is based on standardized mean difference with 95% confidence interval.</p>
-<section id="frailty-model-1" class="level3">
-<h3 class="anchored" data-anchor-id="frailty-model-1">Frailty model</h3>
+<section id="frailty-model" class="level3">
+<h3 class="anchored" data-anchor-id="frailty-model">Frailty model</h3>
 <p>In the frailty model, the strongest and most consistent association was with BMI. The coefficient for standardized BMI, was positive and clearly different from zero (<span class="math inline">\(\beta\)</span> = 0.48, CI<sub>95%</sub>[0.25, 0.7], pd = 100%, ps = 99.9%), indicating higher frailty scores at higher BMI after adjustment for time, sex, age, and platelet subtypes. Age showed a smaller positive association that was compatible with a modest effect, although the interval approached the null (<span class="math inline">\(\beta\)</span> = 0.24, CI<sub>95%</sub>[-0.01, 0.48], pd = 97.5%, ps = 87.1%). Sex was not clearly associated with frailty (<span class="math inline">\(\beta\)</span> = 0.25, CI<sub>95%</sub>[-0.3, 0.81], pd = 81.2%, ps = 70.6%). The polynomial time terms did not provide strong evidence of a trend in frailty across visits (<span class="math inline">\(\beta\)</span> = -0.36, CI<sub>95%</sub>[-1.17, 0.44], pd = 81.1%, ps = 74%). The interaction terms between time and sex, age, or BMI were also compatible with no clear effect modification, as all intervals spanned zero with low posterior probability.</p>
 <p>For the platelet predictors, there was mild evidence that platelet subtype was associated with frailty at the reference time structure of the model. The main effect of the CD41<sup>+</sup>/CD62<sup>-</sup> percentage was negative, suggesting that higher proportions of this platelet subtype were linked with lower frailty scores, however these effects were uncertain (<span class="math inline">\(\beta\)</span> = -0.19, CI<sub>95%</sub>[-0.65, 0.28], pd = 79.4%, ps = 64.9%). On the contrary, the corresponding effect from CD41<sup>+</sup>/CD62<sup>+</sup> subtype on frailty scores was essentially null (<span class="math inline">\(\beta\)</span> = 0.01, CI<sub>95%</sub>[-0.35, 0.36], pd = 51.9%, ps = 30.2%). Likewise, the time-by-platelet interactions were imprecise for CD41<sup>+</sup>/CD62<sup>-</sup> subtypes for linear interaction effects (<span class="math inline">\(\beta\)</span> = 0.36, CI<sub>95%</sub>[-0.33, 1.04], pd = 85.5%, ps = 77.9%). Similar findings were observed for CD41<sup>+</sup>/CD62<sup>+</sup> (<span class="math inline">\(\beta\)</span> = 0.29, CI<sub>95%</sub>[-0.25, 0.84], pd = 84.8%, ps = 75.2%). Taken together, the estimates from this model suggest that the effect of platelet subtype on frailty scores were relatively constant over time (i.e., no time-by-platelet interaction), whereas the CD41<sup>+</sup>/CD62<sup>-</sup> platelet subtype was deemed protective against frailty. However, these effects are based on uncertain estimates and should be regarded as suggestive trends rather than definitive evidence of a mechanistic link.</p>
 <p>The platelet submodels, however, did show a clear temporal pattern. The percentage of CD41<sup>+</sup>/CD62<sup>-</sup> platelets declined over time, with both the linear and quadratic terms strongly negative (linear effect, <span class="math inline">\(\beta\)</span> = -0.96, CI<sub>95%</sub>[-1.13, -0.79], pd = 100%, ps = 100%; quadratic effect, <span class="math inline">\(\beta\)</span> = -0.48, CI<sub>95%</sub>[-0.65, -0.3], pd = 100%, ps = 100%). The CD41<sup>+</sup>/CD62<sup>+</sup> percentage also tended to decrease, though more modestly (<span class="math inline">\(\beta\)</span> = -0.24, CI<sub>95%</sub>[-0.45, -0.02], pd = 98.7%, ps = 91.1%). Thus, the main temporal signal in the frailty model was not a strong outcome change in frailty itself, but a downward trend in platelet composition over follow-up.</p>
 </section>
-<section id="body-composition-model-1" class="level3">
-<h3 class="anchored" data-anchor-id="body-composition-model-1">Body composition model</h3>
+<section id="body-composition-model" class="level3">
+<h3 class="anchored" data-anchor-id="body-composition-model">Body composition model</h3>
 <p>The body-composition model showed pronounced sex differences and a clear association with BMI, but little evidence that platelet subtype levels were directly related to muscle or fat mass. For muscle mass, the sex effect was large and negative for females relative to males (<span class="math inline">\(\beta\)</span> = -1.63, CI<sub>95%</sub>[-1.83, -1.42], pd = 100%, ps = 100%), suggesting lower muscle mass in female counterparts. Age was weakly negative (<span class="math inline">\(\beta\)</span> = -0.11, CI<sub>95%</sub>[-0.2, -0.01], pd = 98.8%, ps = 56.9%). For fat mass, the sex effect reversed in direction and was strongly positive (<span class="math inline">\(\beta\)</span> = 1.32, CI<sub>95%</sub>[1.18, 1.46], pd = 100%, ps = 100%), indicating higher adiposity in female subjects compared to males. These estimates indicate substantial sex-related differences in body composition and a robust positive relation between BMI and both standardized body-composition outcomes.</p>
 <p>The time effects for body composition were small and not clearly different from zero. The time-by-covariate interactions were also largely null, suggesting no strong evidence that the adjusted associations of sex, age, or BMI with body composition changed over the three visits.</p>
 <p>The platelet terms in the body-composition outcomes were also imprecise. For muscle mass, the main effects of the platelet variables were close to zero for both platelet phenotypes (CD41<sup>+</sup>/CD62<sup>-</sup>, <span class="math inline">\(\beta\)</span> = -0.04, CI<sub>95%</sub>[-0.82, 0.69], pd = 55.7%, ps = 43.2%; CD41<sup>+</sup>/CD62<sup>+</sup>, <span class="math inline">\(\beta\)</span> = -0.02, CI<sub>95%</sub>[-0.79, 0.59], pd = 53%, ps = 38.7%), suggesting that platelet subtype is not associated with body composition in elderly individuals. For fat mass, the corresponding terms were similarly weak (CD41<sup>+</sup>/CD62<sup>-</sup>, <span class="math inline">\(\beta\)</span> = -0.04, CI<sub>95%</sub>[-0.71, 0.66], pd = 56.5%, ps = 40.8%; CD41<sup>+</sup>/CD62<sup>+</sup>, <span class="math inline">\(\beta\)</span> = -0.05, CI<sub>95%</sub>[-0.21, 0.11], pd = 75%, ps = 28%). The interaction terms with time were also compatible with no compositional effect modification. The residual correlation between muscle and fat mass was negative but uncertain (<span class="math inline">\(r\)</span> = -0.49, CI<sub>95%</sub>[-0.84, 0.16], pd = 92.1%, ps = 87.9%), suggesting possible inverse co-variation that was not precisely estimated in this sample. The two platelet subtypes were strongly inversely correlated with each other (<span class="math inline">\(\beta\)</span> = -0.54, CI<sub>95%</sub>[-0.65, -0.43], pd = 100%, ps = 100%). Overall, the model supports strong anthropometric patterning by sex and BMI, but not a clear platelet-body composition association.</p>
 </section>
+<section id="physical-function-model" class="level3">
+<h3 class="anchored" data-anchor-id="physical-function-model">Physical function model</h3>
+<p>The physical-function model showed the clearest set of associations with platelet subtype, especially for the CD41<sup>+</sup>/CD62<sup>+</sup> percentage. For handgrip strength, the females had lower estimated hand strength compared with their male counterparts (<span class="math inline">\(\beta\)</span> = -1.52, CI<sub>95%</sub>[-1.76, -1.27], pd = 100%, ps = 100%), and age was also associated with lower average handgrip values (<span class="math inline">\(\beta\)</span> = -0.12, CI<sub>95%</sub>[-0.23, -0.01], pd = 98.5%, ps = 66.7%). The time terms for handgrip were not clearly different from zero (<span class="math inline">\(\beta\)</span> = 0.28, CI<sub>95%</sub>[-0.33, 0.87], pd = 83.8%, ps = 74%). Importantly, a small effect was observed for platelets subtypes, suggesting that higher proportions in both phenotypes were linked with greater handgrip levels (CD41<sup>+</sup>/CD62<sup>-</sup>, <span class="math inline">\(\beta\)</span> = 0.37, CI<sub>95%</sub>[-0.28, 0.89], pd = 89.4%, ps = 82.5%; CD41<sup>+</sup>/CD62<sup>+</sup>, <span class="math inline">\(\beta\)</span> = 0.3, CI<sub>95%</sub>[-0.24, 0.85], pd = 87.4%, ps = 78.2%). This pattern suggests that platelet composition could meaningfully predict, at least partially, average grip strength in the adjusted models accounting for confounding factors.</p>
+<p>By contrast, chair sit-to-stand performance and elbow flexion showed positive associations with the CD41<sup>+</sup>/CD62<sup>+</sup> subtype. For chair sit-to-stand, higher CD41<sup>+</sup>/CD62<sup>-</sup> was indicative of better performance (<span class="math inline">\(\beta\)</span> = 1.57 CI<sub>95%</sub>[0.32, 2.69], pd = 98.9%, ps = 98.4%), and the interaction with the linear time contrast was also positive (<span class="math inline">\(\beta\)</span> = 0.29, CI<sub>95%</sub>[0, 0.58], pd = 97.5%, ps = 90%), suggesting that as time goes by, the effect of CD41<sup>+</sup>/CD62<sup>-</sup> on chair sit-to-stand performance further increases. The CD41<sup>+</sup>/CD62<sup>+</sup> subtype showed a similar effect association, although more uncertain, with the same outcome (<span class="math inline">\(\beta\)</span> = 0.96, CI<sub>95%</sub>[-0.46, 2.08], pd = 91.6%, ps = 89.4%), although its linear interaction was also positive (<span class="math inline">\(\beta\)</span> = 0.2, CI<sub>95%</sub>[0, 0.42], pd = 97.3%, ps = 82.6%). For elbow flexion, the CD41<sup>+</sup>/CD62<sup>+</sup> term was again positive (<span class="math inline">\(\beta\)</span> = 1.28, CI<sub>95%</sub>[0.19, 2.31], pd = 98.1%, ps = 97.5%), with a suggestive but less definitive linear interaction (<span class="math inline">\(\beta\)</span> = 0.26, CI<sub>95%</sub>[-0.06, 0.59], pd = 93.4%, ps = 82.4%). These results indicate that higher CD41<sup>+</sup>/CD62<sup>+</sup> platelet percentages were associated with better performance in the upper- and lower-limb endurance tests, and that at least part of this association strengthened over time.</p>
+<p>Timed up-and-go showed the opposite direction. The main effects of the platelet subtype were negative (CD41<sup>+</sup>/CD62<sup>+</sup>, <span class="math inline">\(\beta\)</span> = -1.21, CI<sub>95%</sub>[-2.2, -0.06], pd = 97.3%, ps = 96.4%; CD41<sup>+</sup>/CD62<sup>-</sup>, <span class="math inline">\(\beta\)</span> = -1.08, CI<sub>95%</sub>[-2.18, 0.09], pd = 96.3%, ps = 94.9%). Because the timed up-and-go outcome is measured in seconds, lower values indicate better performance, so these estimates are consistent with better mobility at higher platelet percentages, particularly for the CD41<sup>+</sup>/CD62<sup>+</sup> subtype. The time interaction terms for timed up-and-go were not clearly different from zero (CD41<sup>+</sup>/CD62<sup>-</sup>, <span class="math inline">\(\beta\)</span> = -0.04, CI<sub>95%</sub>[-0.32, 0.25], pd = 61.5%, ps = 34.3%; CD41<sup>+</sup>/CD62<sup>+</sup>, <span class="math inline">\(\beta\)</span> = -0.03, CI<sub>95%</sub>[-0.24, 0.17], pd = 61.7%, ps = 24.8%). The direct time effects for the function outcomes were also informative: chair stand and elbow flexion increased over time (chair sit-to-stand, <span class="math inline">\(\beta\)</span> = 1.76, CI<sub>95%</sub>[0.66, 2.83], pd = 99.8%, ps = 99.7%; elbow flexion test, <span class="math inline">\(\beta\)</span> = 2.03, CI<sub>95%</sub>[1.05, 3.09], pd = 99.9%, ps = 99.9%), whereas timed up-and-go times declined (<span class="math inline">\(\beta\)</span> = -1.14, CI<sub>95%</sub>[-2.14, -0.12], pd = 98.2%, ps = 97.5%). Finally, the residual correlations were substantial across the functional tests, especially between chair sit-to-stand and elbow flexion (<span class="math inline">\(\beta\)</span> = 0.86, CI<sub>95%</sub>[0.62, 0.96], pd = 100%, ps = 99.9%), and strongly negative between timed up-and-go and the strength/endurance measures (dinamometer - timed up-and-go, <span class="math inline">\(r\)</span> = -0.6, CI<sub>95%</sub>[-0.84, -0.23], pd = 99.4%, ps = 98.6%; chair sit-to-stand - timed up-and-go, <span class="math inline">\(r\)</span> = -0.82, CI<sub>95%</sub>[-0.95, -0.55], pd = 99.9%, ps = 99.9%; elbow flexion - timed up-and-go, <span class="math inline">\(r\)</span> = -0.77, CI<sub>95%</sub>[-0.93, -0.42], pd = 99.9%, ps = 99.7%). These residual associations support the multivariate specification and indicate that the function outcomes shared substantial unexplained variation.</p>
+</section>
+</section>
+</section>
+<section id="methods" class="level1">
+<h1>Methods</h1>
+<section id="statistical-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-analysis">Statistical analysis</h2>
+<p>We analyzed the data using Bayesian multilevel regression models. Time was treated as an ordered factor with three occasions (t-1, t-`, and t-3), and the model used polynomial contrasts for this factor. Accordingly, the time effect was represented by two orthogonal components, a linear term and a quadratic term, rather than by pairwise comparisons against a single reference level. The main aim of the models was to evaluate whether the longitudinal association between platelet subtypes and the study outcomes changed over time, while adjusting for sex, age, and body mass index (BMI). Participant-level heterogeneity was modeled through random intercepts. Because the same participants contributed repeated measurements, this random-intercept structure was used to account for within-person correlation across visits.</p>
+<p>Let <span class="math inline">\(i = 1,\dots,N\)</span> index participants and <span class="math inline">\(t \in \{1,2,3\}\)</span> index measurement occasions. Let</p>
+<p><span class="math display">\[
+\mathbf{z}_{it} =
+\begin{pmatrix}
+P^{-}_{it} \\
+P^{+}_{it} \\
+\text{sex}_i \\
+\text{age}_{i} \\
+\text{BMI}_{i}
+\end{pmatrix},
+\]</span></p>
+<p>where <span class="math inline">\(P^{-}_{it}\)</span> denotes the standardized percentage of CD41<span class="math inline">\(^+\)</span>/CD62<span class="math inline">\(^-\)</span> platelets and <span class="math inline">\(P^{+}_{it}\)</span> denotes the standardized percentage of CD41<span class="math inline">\(^+\)</span>/CD62<span class="math inline">\(^+\)</span> platelets. To represent the ordered time factor, let</p>
+<p><span class="math display">\[
+\mathbf{c}_t =
+\begin{pmatrix}
+L_t \\
+Q_t
+\end{pmatrix},
+\]</span> where <span class="math inline">\(L_t\)</span> and <span class="math inline">\(Q_t\)</span> are the linear and quadratic polynomial contrast scores for time, respectively. This notation keeps the model specification compact while preserving the structure of the fitted formulas. In all cases, time-by-covariate terms were included so that the association between platelet composition and the outcomes could vary across the longitudinal trajectory in its linear and quadratic components.</p>
+<section id="frailty-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="frailty-model-1">Frailty model</h3>
+<p>Frailty was analyzed as a binomial outcome with four trials per observation, corresponding to the FRAIL questionnaire score ranging from 0 to 4. Let <span class="math inline">\(F_{it}\)</span> denote the frailty score for participant <span class="math inline">\(i\)</span> at time <span class="math inline">\(t\)</span>. The model was specified as</p>
+<p><span class="math display">\[
+F_{it} \sim \text{Binomial}(4, p_{it}),
+\]</span></p>
+<p>with logit link</p>
+<p><span class="math display">\[
+\text{logit}(p_{it}) = \eta^{(F)}_{it}.
+\]</span></p>
+<p>The linear predictor was written as</p>
+<p><span class="math display">\[
+\eta^{(F)}_{it}
+= \alpha_F
++ \mathbf{c}_t^\top \boldsymbol{\tau}_F
++ \mathbf{z}_{it}^\top \boldsymbol{\beta}_F
++ (\mathbf{c}_t \otimes \mathbf{z}_{it})^\top \boldsymbol{\Gamma}_F
++ u^{(F)}_i,
+\]</span> where <span class="math inline">\(\alpha_F\)</span> is the intercept, <span class="math inline">\(\boldsymbol{\tau}_F\)</span> contains the linear and quadratic time effects, <span class="math inline">\(\boldsymbol{\beta}_F\)</span> contains the main effects of platelet percentages and covariates, and <span class="math inline">\(\boldsymbol{\Gamma}_F\)</span> contains the interactions between the time polynomial terms and the predictors. The term <span class="math inline">\(u^{(F)}_i \sim \mathcal{N}(0,\sigma_F^2)\)</span> is the participant-specific random intercept. This formulation implies that the association between each platelet subtype and frailty can differ not only over time in general, but specifically across the linear and quadratic components of the ordered time factor. Because the platelet predictors were included through <code>mi()</code>, missing values were handled inside the model rather than by complete-case deletion, so uncertainty in those predictors was propagated into the frailty estimates.</p>
+<p>Although the FRAIL questionnaire score has four ordered levels, it was modeled as a binomial count with four trials because the score is bounded between 0 and 4 and the <code>brms</code> formulation directly accommodates this structure. The resulting coefficients are interpreted on the log-odds scale. Exponentiating a coefficient gives an odds ratio associated with a one-unit increase in the predictor, holding the remaining covariates constant. The coefficients for the time contrasts represent the shape of change across the three measurement occasions: the linear term captures monotonic increase or decrease across time, and the quadratic term captures curvature. The interaction terms indicate whether that temporal pattern differs according to platelet subtype or covariate level.</p>
+</section>
+<section id="body-composition-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="body-composition-model-1">Body composition model</h3>
+<p>Muscle mass and fat mass were modeled jointly as a multivariate Gaussian outcome. Let <span class="math inline">\(M_{it}\)</span> denote standardized muscle mass and <span class="math inline">\(G_{it}\)</span> denote standardized fat mass. The joint response was</p>
+<p><span class="math display">\[
+\mathbf{Y}^{(C)}_{it}
+=
+\begin{pmatrix}
+M_{it} \\
+G_{it}
+\end{pmatrix}
+\sim
+\mathcal{N}_2\!\left(
+\boldsymbol{\mu}^{(C)}_{it},
+\boldsymbol{\Sigma}^{(C)}
+\right),
+\]</span></p>
+<p>where <span class="math inline">\(\boldsymbol{\Sigma}^{(C)}\)</span> is the residual covariance matrix. The outcome-specific linear predictor can be written compactly as</p>
+<p><span class="math display">\[
+\boldsymbol{\mu}^{(C)}_{it}
+= \boldsymbol{\alpha}_C
++ \mathbf{B}_C \mathbf{z}_{it}
++ \mathbf{A}_C \mathbf{c}_t
++ \mathbf{G}_C (\mathbf{c}_t \otimes \mathbf{z}_{it})
++ \mathbf{u}^{(C)}_i.
+\]</span></p>
+<p>Here, <span class="math inline">\(\boldsymbol{\alpha}_C\)</span> is a 2-dimensional intercept vector, <span class="math inline">\(\mathbf{B}_C\)</span> contains the main effects for the two platelet variables and the adjustment covariates, <span class="math inline">\(\mathbf{A}_C\)</span> contains the linear and quadratic time effects, and <span class="math inline">\(\mathbf{G}_C\)</span> contains the corresponding time-by-predictor interaction terms. The random-intercept vector <span class="math inline">\(\mathbf{u}^{(C)}_i\)</span> captures subject-specific deviations for the two outcomes. This multivariate structure allows the two body-composition outcomes to be modeled jointly while estimating their residual correlation after adjustment for time, covariates, and participant-level heterogeneity.</p>
+<p>This specification is useful because muscle mass and fat mass are biologically related and may show correlated variation that is not fully explained by the measured covariates. By modeling them jointly, the analysis exploits that dependence rather than treating the outcomes as statistically independent. The fixed effects quantify adjusted associations for each outcome separately, while the residual covariance matrix summarizes the remaining contemporaneous association between muscle and fat mass after accounting for the predictors in the model.</p>
+</section>
 <section id="physical-function-model-1" class="level3">
 <h3 class="anchored" data-anchor-id="physical-function-model-1">Physical function model</h3>
-<p>The physical-function model showed the clearest set of associations with platelet subtype, especially for the CD41<sup>+</sup>/CD62<sup>+</sup> percentage. For handgrip strength, the females had lower estimated hand strength compared with their male counterparts (<span class="math inline">\(\beta\)</span> = -1.52, CI<sub>95%</sub>[-1.76, -1.27], pd = 100%, ps = 100%), and age was also associated with lower average handgrip values (<span class="math inline">\(\beta\)</span> = -0.12, CI<sub>95%</sub>[-0.23, -0.01], pd = 98.5%, ps = 66.7%). The time terms for handgrip were not clearly different from zero (<span class="math inline">\(\beta\)</span> = 0.28, CI<sub>95%</sub>[-0.33, 0.87], pd = 83.8%, ps = 74%). Importantly, a small effect was observed for platelets subtypes, suggesting that higher proportions in both phenotypes were linked with greater handgrip levels (CD41<sup>+</sup>/CD62<sup>-</sup>, <span class="math inline">\(\beta\)</span> = 0.37, CI<sub>95%</sub>[-0.28, 0.89], pd = 89.4%, ps = 82.5%; CD41<sup>+</sup>/CD62<sup>+</sup>, <span class="math inline">\(\beta\)</span> = 0.3, CI<sub>95%</sub>[-0.24, 0.85], pd = 87.4%, ps = 78.2%). This pattern suggests that platelet composition could meaningfully predict, at least partially, average grip strength in the adjusted models accounting for confounding factors.</p>
-<p>By contrast, chair sit-to-stand performance and elbow flexion showed positive associations with the CD41<sup>+</sup>/CD62<sup>+</sup> subtype. For chair sit-to-stand, <code>bsp_sftcststd_micd41_positive_cd62_negative_std</code> was 1.57 (95% CI 0.32 to 2.69), and the interaction with the linear time contrast was also positive (<code>bsp_sftcststd_micd41_positive_cd62_negative_std:time.L</code>, estimate 0.29, 95% CI 0.00 to 0.58). The CD41<sup>+</sup>/CD62<sup>+</sup> subtype showed a weaker and less certain association with the same outcome (<code>bsp_sftcststd_micd41_positive_cd62_positive_std</code>, estimate 0.96, 95% CI -0.46 to 2.08), although its linear interaction was also positive (<code>bsp_sftcststd_micd41_positive_cd62_positive_std:time.L</code>, estimate 0.20, 95% CI 0.00 to 0.42). For elbow flexion, the CD41<sup>+</sup>/CD62<sup>+</sup> term was again positive (<code>bsp_sftelbowflexionstd_micd41_positive_cd62_negative_std</code>, estimate 1.28, 95% CI 0.19 to 2.31), with a suggestive but less definitive linear interaction (<code>bsp_sftelbowflexionstd_micd41_positive_cd62_negative_std:time.L</code>, estimate 0.26, 95% CI -0.06 to 0.59). These results indicate that higher CD41<sup>+</sup>/CD62<sup>+</sup> platelet percentages were associated with better performance in the upper- and lower-limb endurance tests, and that at least part of this association strengthened over time.</p>
-<p>Timed up-and-go showed the opposite direction. The main effects of the platelet subtype were negative, with <code>bsp_sftfutstd_micd41_positive_cd62_negative_std</code> at -1.21 (95% CI -2.20 to -0.06) and <code>bsp_sftfutstd_micd41_positive_cd62_positive_std</code> at -1.08 (95% CI -2.18 to 0.09). Because the timed up-and-go outcome is measured in seconds, lower values indicate better performance, so these estimates are consistent with better mobility at higher platelet percentages, particularly for the CD41<sup>+</sup>/CD62<sup>+</sup> subtype. The time interaction terms for timed up-and-go were not clearly different from zero, however (<code>bsp_sftfutstd_micd41_positive_cd62_negative_std:time.L</code>, estimate -0.04, 95% CI -0.32 to 0.25; <code>bsp_sftfutstd_micd41_positive_cd62_negative_std:time.Q</code>, estimate -0.26, 95% CI -0.62 to 0.10). The direct time effects for the function outcomes were also informative: chair stand and elbow flexion increased over time (<code>b_sftcststd_time.L</code>, estimate 1.76, 95% CI 0.66 to 2.83; <code>b_sftelbowflexionstd_time.L</code>, estimate 2.03, 95% CI 1.05 to 3.09), whereas timed up-and-go declined (<code>b_sftfutstd_time.L</code>, estimate -1.14, 95% CI -2.14 to -0.12). Finally, the residual correlations were substantial across the functional tests, especially between chair sit-to-stand and elbow flexion (<code>rescor__sftcststd__sftelbowflexionstd</code>, estimate 0.86, 95% CI 0.62 to 0.96), and strongly negative between timed up-and-go and the strength/endurance measures (<code>rescor__dinamometeraveragestd__sftfutstd</code>, estimate -0.60, 95% CI -0.84 to -0.23; <code>rescor__sftcststd__sftfutstd</code>, estimate -0.82, 95% CI -0.95 to -0.55; <code>rescor__sftelbowflexionstd__sftfutstd</code>, estimate -0.77, 95% CI -0.93 to -0.42). These residual associations support the multivariate specification and indicate that the function outcomes shared substantial unexplained variation.</p>
+<p>Physical function was modeled in the same multivariate framework, but with four Gaussian outcomes. Let <span class="math inline">\(D_{it}\)</span> denote standardized average handgrip strength, <span class="math inline">\(S_{it}\)</span> standardized chair sit-to-stand performance, <span class="math inline">\(E_{it}\)</span> standardized elbow flexion performance, and <span class="math inline">\(T_{it}\)</span> standardized timed up-and-go performance. The joint response was</p>
+<p><span class="math display">\[
+\mathbf{Y}^{(F)}_{it}
+=
+\begin{pmatrix}
+D_{it} \\
+S_{it} \\
+E_{it} \\
+T_{it}
+\end{pmatrix}
+\sim
+\mathcal{N}_4\!\left(
+\boldsymbol{\mu}^{(F)}_{it},
+\boldsymbol{\Sigma}^{(F)}
+\right).
+\]</span></p>
+<p>The corresponding linear predictor was</p>
+<p><span class="math display">\[
+\boldsymbol{\mu}^{(F)}_{it}
+= \boldsymbol{\alpha}_F
++ \mathbf{B}_F \mathbf{z}_{it}
++ \mathbf{A}_F \mathbf{c}_t
++ \mathbf{G}_F (\mathbf{c}_t \otimes \mathbf{z}_{it})
++ \mathbf{u}^{(F)}_i.
+\]</span> As in the body-composition model, <span class="math inline">\(\boldsymbol{\alpha}_F\)</span> is a vector of intercepts, <span class="math inline">\(\mathbf{B}_F\)</span> contains the main effects, <span class="math inline">\(\mathbf{A}_F\)</span> contains the linear and quadratic effects of time, <span class="math inline">\(\mathbf{G}_F\)</span> contains the time-by-predictor interactions, and <span class="math inline">\(\mathbf{u}^{(F)}_i\)</span> denotes the participant-specific random intercepts. The covariance matrix <span class="math inline">\(\boldsymbol{\Sigma}^{(F)}\)</span> captures residual dependence among the four function outcomes after adjustment.</p>
+<p>This multivariate specification is appropriate because the physical function tests are related but not identical aspects of performance. Handgrip strength, chair stand, elbow flexion, and timed up-and-go may share common determinants, yet each outcome also retains outcome-specific variation. Joint modeling allows the estimated associations with platelet subtypes to be assessed simultaneously across all four outcomes, while preserving their correlation structure. In practice, this is preferable to running separate univariate models if the aim is to compare effect patterns across the functional domain and to obtain a coherent multivariate summary.</p>
+</section>
+<section id="estimation-and-interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="estimation-and-interpretation">Estimation and interpretation</h3>
+<p>All models were estimated in a Bayesian framework. Posterior summaries were used to describe the adjusted associations between platelet subtypes and the outcomes. For each coefficient, we examined the posterior mean or median and the corresponding 95% credible interval. The main effects of the platelet variables describe associations across the longitudinal trend after accounting for the polynomial time structure, rather than associations at a single reference visit. The coefficients attached to <span class="math inline">\(\mathbf{c}_t\)</span> quantify the overall linear and quadratic shape of change across t-1, t-2, and t-3 when all continuous predictors are held constant. The time-by-predictor interaction terms indicate whether the relationship between platelet composition and the outcome changes in its linear or quadratic component over time.</p>
+<p>For the frailty model, coefficients are interpreted on the log-odds scale and can be expressed as odds ratios by exponentiation. For the Gaussian models, coefficients are interpreted as expected changes in the standardized outcome per one-unit increase in the predictor, holding the other terms constant. Because the outcomes in the body-composition and physical-function models were standardized, the coefficients are directly comparable in standardized units across outcomes. The residual correlation matrices in the multivariate models were also examined, since they quantify the dependence among outcomes that remains after adjustment for the fixed effects and random intercepts.</p>
+<p>Model interpretation focused on the magnitude and direction of the posterior estimates, together with uncertainty reflected in the credible intervals. Time-by-platelet interactions were treated as evidence of effect heterogeneity across the ordered follow-up trajectory, specifically whether the association differed in the linear or quadratic temporal component. In the multivariate models, a nonzero residual correlation suggests that outcomes still share variation beyond what is explained by the measured predictors, which supports the use of a joint modeling strategy rather than independent regressions.</p>
 </section>
 </section>
 </section>
