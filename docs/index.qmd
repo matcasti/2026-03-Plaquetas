@@ -10,9 +10,9 @@ comments:
   hypothesis: true
 ---
 
-# Overview of findings
+![Graphical abstract](graphical-abstract.png){width=100% style="border-radius:10px"}
 
-![](graphical-abstract.png){width=100% style="border-radius:10px"}
+# Overview of findings
 
 This paper raises an interesting possibility: could platelet subtype composition reflect an underlying biology of healthier aging? The authors studied 137 community-dwelling older adults and measured two platelet phenotypes, CD41^+^/CD62^−^ and CD41^+^/CD62^+^, alongside frailty, body composition, and physical performance over time. The cohort was relatively old but not highly frail, which makes the findings especially relevant for studying early or subtle geriatric changes. Using longitudinal mixed-effects models adjusted for age, sex, BMI, and time, this study asked whether platelet patterns tracked with broader markers of aging.
 
