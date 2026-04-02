@@ -5,7 +5,13 @@ author:
   - name: "Matías Castillo-Aguilar"
     orcid: "https://orcid.org/0000-0001-7291-247X"
     affiliation: "Escuela de Medicina, Universidad de Magallanes"
-format: html
+format: 
+  html:
+    date: today
+    title-block-style: manuscript
+    toc: true
+    code-tools: true
+    ojs-engine: true
 comments: 
   hypothesis: true
 ---
@@ -64,7 +70,7 @@ tbl_1
 
 **Table 1**. Sample description and sociodemographic characterization. Data is presented as mean ± standard deviation for numerical variables, meanwhile absolute and relative frequency was used for discrete ones. Difference between males and females is based on standardized mean difference with 95% confidence interval.
 
-### Frailty model
+## Frailty model
 
 ```{r}
 #| include: false
@@ -77,7 +83,7 @@ For the platelet predictors, there was mild evidence that platelet subtype was a
 
 The platelet submodels, however, did show a clear temporal pattern. The percentage of CD41^+^/CD62^-^ platelets declined over time, with both the linear and quadratic terms strongly negative (linear effect, $\beta$ = -0.96, CI~95%~[-1.13, -0.79], pd = 100%, ps = 100%; quadratic effect, $\beta$ = -0.48, CI~95%~[-0.65, -0.3], pd = 100%, ps = 100%). The CD41^+^/CD62^+^ percentage also tended to decrease, though more modestly ($\beta$ = -0.24, CI~95%~[-0.45, -0.02], pd = 98.7%, ps = 91.1%). Thus, the main temporal signal in the frailty model was not a strong outcome change in frailty itself, but a downward trend in platelet composition over follow-up. 
 
-### Body composition model
+## Body composition model
 
 ```{r}
 #| include: false
@@ -90,7 +96,7 @@ The time effects for body composition were small and not clearly different from 
 
 The platelet terms in the body-composition outcomes were also imprecise. For muscle mass, the main effects of the platelet variables were close to zero for both platelet phenotypes (CD41^+^/CD62^-^, $\beta$ = -0.04, CI~95%~[-0.82, 0.69], pd = 55.7%, ps = 43.2%; CD41^+^/CD62^+^, $\beta$ = -0.02, CI~95%~[-0.79, 0.59], pd = 53%, ps = 38.7%), suggesting that platelet subtype is not associated with body composition in elderly individuals. For fat mass, the corresponding terms were similarly weak (CD41^+^/CD62^-^, $\beta$ = -0.04, CI~95%~[-0.71, 0.66], pd = 56.5%, ps = 40.8%; CD41^+^/CD62^+^, $\beta$ = -0.05, CI~95%~[-0.21, 0.11], pd = 75%, ps = 28%). The interaction terms with time were also compatible with no compositional effect modification. The residual correlation between muscle and fat mass was negative but uncertain ($r$ = -0.49, CI~95%~[-0.84, 0.16], pd = 92.1%, ps = 87.9%), suggesting possible inverse co-variation that was not precisely estimated in this sample. The two platelet subtypes were strongly inversely correlated with each other ($\beta$ = -0.54, CI~95%~[-0.65, -0.43], pd = 100%, ps = 100%). Overall, the model supports strong anthropometric patterning by sex and BMI, but not a clear platelet-body composition association. 
 
-### Physical function model
+## Physical function model
 
 ```{r}
 #| include: false
