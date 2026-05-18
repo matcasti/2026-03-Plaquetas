@@ -6,6 +6,7 @@ author:
     orcid: "https://orcid.org/0000-0001-7291-247X"
     affiliation: "Escuela de Medicina, Universidad de Magallanes"
 format: 
+  docx: default
   html:
     date: today
     title-block-style: manuscript

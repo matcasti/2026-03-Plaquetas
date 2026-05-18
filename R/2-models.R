@@ -14,7 +14,6 @@ data("platelets_d")
 
 # -------------------------------------------------------------------------
 
-
 platelets_d[, cd41_positive_cd62_negative_std := scale(cd41_positive_cd62_negative)][]
 platelets_d[, cd41_positive_cd62_positive_std := scale(cd41_positive_cd62_positive)][]
 platelets_d[, age_std := scale(age)][]

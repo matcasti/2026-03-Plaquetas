@@ -35,6 +35,18 @@ data_merged <- data_merged[redcap_event_name != "initial_data_arm_1"]
 
 # -------------------------------------------------------------------------
 
+data_to_send <- data_merged[, list(first_name, last_name, rut, phase_date,
+                   cd41_negative_cd62_negative, cd41_negative_cd62_positive,
+                   cd41_positive_cd62_negative,cd41_positive_cd62_positive,
+                   redcap_event_name, id)]
+
+data_to_send <- na.omit(data_to_send)
+
+data_to_send[,list(rut, fecha = phase_date, nombre = first_name, apellido = last_name), keyby = id] |>
+  fwrite("output/data_pendiente.csv")
+
+# -------------------------------------------------------------------------
+
 data_merged[, `:=`(
   redcap_survey_identifier = NULL,
   personal_code = NULL, drugs = NULL,
